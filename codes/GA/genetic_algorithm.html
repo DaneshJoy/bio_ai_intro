@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genetic Algorithm Explorer</title>
+<style>
+  :root {
+    --bg:#f8f7f4;--bg2:#f0ede8;--bg3:#e8e4dc;--card:#ffffff;
+    --text:#1a1917;--text2:#5a574f;--text3:#9a9690;
+    --border:rgba(26,25,23,0.12);--border2:rgba(26,25,23,0.22);
+    --blue-bg:#e8f0fb;--blue-text:#1a4fa0;--blue-mid:#3070d0;
+    --green-bg:#e5f2e5;--green-text:#1a6b1a;
+    --amber-bg:#fdf0d8;--amber-text:#8a5200;--amber-mid:#e8960a;
+    --red-bg:#fce8e8;--red-text:#9a1a1a;
+    --purple-bg:#eeebfc;--purple-text:#3a2aaa;
+    --radius:10px;--radius-sm:6px;
+    --shadow:0 1px 3px rgba(0,0,0,0.07),0 4px 16px rgba(0,0,0,0.04);
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Georgia','Times New Roman',serif;background:var(--bg);color:var(--text);min-height:100vh;padding:2rem 1rem}
+  .page{max-width:860px;margin:0 auto}
+  .page-header{margin-bottom:2rem}
+  .page-header h1{font-family:'Courier New',monospace;font-size:26px;font-weight:700;letter-spacing:-.5px;margin-bottom:6px}
+  .page-header h1 span{color:var(--blue-mid)}
+  .page-header p{font-size:14px;color:var(--text2);line-height:1.6}
+  .goal-chip{display:inline-flex;align-items:center;gap:6px;background:var(--blue-bg);color:var(--blue-text);border:1px solid rgba(48,112,208,0.25);border-radius:20px;padding:4px 12px;font-size:12px;font-family:'Courier New',monospace;font-weight:600;margin-top:8px}
+  .controls-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem 1.5rem;box-shadow:var(--shadow);margin-bottom:1rem}
+  .controls-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:16px;margin-bottom:1.25rem}
+  .ctrl{display:flex;flex-direction:column;gap:4px}
+  .ctrl label{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);font-family:'Courier New',monospace}
+  .ctrl .val{font-size:13px;font-weight:700;color:var(--blue-text);font-family:'Courier New',monospace}
+  input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--bg3);border-radius:2px;outline:none;cursor:pointer}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--blue-mid);cursor:pointer;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.2)}
+  input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--blue-mid);cursor:pointer;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.2)}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap}
+  button{cursor:pointer;font-size:12px;font-weight:700;font-family:'Courier New',monospace;padding:8px 14px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--card);color:var(--text);transition:all .15s;letter-spacing:.02em}
+  button:hover{background:var(--bg2)}
+  button:active{transform:scale(.97)}
+  button:disabled{opacity:.35;cursor:not-allowed;transform:none}
+  button.primary{background:var(--blue-mid);color:white;border-color:var(--blue-mid)}
+  button.primary:hover{background:#1a4fa0;border-color:#1a4fa0}
+  button.danger{background:var(--red-bg);color:var(--red-text);border-color:rgba(154,26,26,.2)}
+  .steps-nav{display:flex;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--card);box-shadow:var(--shadow);margin-bottom:1rem}
+  .step-tab{flex:1;padding:9px 4px;font-size:11px;text-align:center;cursor:pointer;color:var(--text3);background:transparent;border:none;border-right:1px solid var(--border);font-family:'Courier New',monospace;font-weight:600;letter-spacing:.02em;transition:all .15s}
+  .step-tab:last-child{border-right:none}
+  .step-tab.active{background:var(--blue-mid);color:white}
+  .step-tab.done{background:var(--green-bg);color:var(--green-text)}
+  .panel-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem 1.5rem;box-shadow:var(--shadow);margin-bottom:1rem;animation:fadeIn .2s ease}
+  @keyframes fadeIn{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .step-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .step-header h3{font-size:16px;font-weight:700;font-family:'Courier New',monospace}
+  .step-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;font-family:'Courier New',monospace;flex-shrink:0}
+  .step-dot.active{background:var(--blue-mid);color:white}
+  .step-dot.done{background:var(--green-bg);color:var(--green-text)}
+  .step-dot.idle{background:var(--bg2);color:var(--text3)}
+  .explain-box{background:var(--blue-bg);border-left:3px solid var(--blue-mid);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:10px 14px;font-size:13px;color:var(--blue-text);line-height:1.65;margin-bottom:14px}
+  .explain-box strong{font-weight:700}
+  .chrom-grid{display:flex;flex-direction:column;gap:7px}
+  .chrom-row{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
+  .chrom-label{font-size:11px;color:var(--text3);min-width:68px;font-family:'Courier New',monospace;font-weight:600;flex-shrink:0}
+  .genes{display:flex;gap:3px;flex-wrap:wrap}
+  .gene{width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:'Courier New',monospace;border:1px solid transparent;flex-shrink:0}
+  .gene.one {background:var(--blue-bg);color:var(--blue-text);border-color:rgba(48,112,208,.2)}
+  .gene.zero{background:var(--bg2);color:var(--text3);border-color:var(--border)}
+  .gene.mut {background:var(--amber-bg);color:var(--amber-text);border-color:rgba(232,150,10,.5);outline:2px solid var(--amber-mid);outline-offset:1px}
+  .gene.seg-a{background:var(--blue-bg);color:var(--blue-text);border-color:rgba(48,112,208,.35)}
+  .gene.seg-b{background:var(--green-bg);color:var(--green-text);border-color:rgba(26,107,26,.35)}
+  .cut-marker{width:3px;height:24px;background:#d83030;border-radius:2px;flex-shrink:0;position:relative}
+  .cut-marker::after{content:'cut';position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:9px;color:#d83030;font-family:'Courier New',monospace;font-weight:700;white-space:nowrap}
+  .fitness-bar-wrap{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;min-width:50px;max-width:110px;flex-shrink:0}
+  .fitness-bar{height:100%;border-radius:3px;background:var(--blue-mid);transition:width .4s}
+  .fitness-num{font-size:12px;font-weight:700;min-width:34px;text-align:right;font-family:'Courier New',monospace;color:var(--text);flex-shrink:0}
+  .badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 7px;border-radius:12px;font-weight:700;font-family:'Courier New',monospace;white-space:nowrap;flex-shrink:0}
+  .badge.elite  {background:var(--purple-bg);color:var(--purple-text);border:1px solid rgba(58,42,170,.15)}
+  .badge.parent {background:var(--green-bg);color:var(--green-text);border:1px solid rgba(26,107,26,.15)}
+  .badge.child  {background:var(--amber-bg);color:var(--amber-text);border:1px solid rgba(232,150,10,.2)}
+  .badge.solved {background:var(--green-bg);color:var(--green-text);border:1px solid rgba(26,107,26,.25);font-size:12px;padding:3px 10px}
+  .gen-badge{background:var(--bg2);color:var(--text2);border:1px solid var(--border);border-radius:12px;padding:3px 10px;font-size:11px;font-weight:700;font-family:'Courier New',monospace}
+  .stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:1rem}
+  @media(max-width:560px){.stats-row{grid-template-columns:repeat(3,1fr)}}
+  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center;box-shadow:var(--shadow)}
+  .stat-card .sv{font-size:20px;font-weight:700;font-family:'Courier New',monospace;color:var(--text)}
+  .stat-card .sl{font-size:10px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+  .co-pair{border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px;background:var(--bg)}
+  .co-pair-label{font-size:11px;color:var(--text3);margin-bottom:10px;font-family:'Courier New',monospace;font-weight:600}
+  .co-arrow{text-align:center;font-size:18px;color:var(--text3);margin:4px 0}
+  .co-divider{border-top:1px dashed var(--border2);margin:10px 0;padding-top:8px;font-size:11px;color:var(--text3);font-family:'Courier New',monospace}
+  .legend-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;align-items:center}
+  .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);font-family:'Courier New',monospace}
+  .legend-swatch{width:14px;height:14px;border-radius:3px;flex-shrink:0}
+  .mut-note{padding:2px 0 6px 76px;font-size:11px;color:var(--amber-text);font-family:'Courier New',monospace}
+  .no-mut-note{padding:2px 0 6px 76px;font-size:11px;color:var(--text3);font-family:'Courier New',monospace}
+  .empty-state{text-align:center;padding:3rem 1rem;background:var(--card);border:1px dashed var(--border2);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .empty-state .big{font-size:40px;margin-bottom:12px}
+  .empty-state h3{font-size:16px;font-weight:700;margin-bottom:6px;font-family:'Courier New',monospace}
+  .empty-state p{font-size:13px;color:var(--text2);line-height:1.6}
+  .solved-banner{background:linear-gradient(135deg,#e5f2e5,#d0ebd0);border:2px solid rgba(26,107,26,.3);border-radius:var(--radius);padding:1rem 1.5rem;text-align:center;margin-bottom:1rem;animation:fadeIn .3s ease}
+  .solved-banner h2{font-size:20px;font-weight:700;color:var(--green-text);font-family:'Courier New',monospace;margin-bottom:4px}
+  .solved-banner p{font-size:13px;color:#2a5a2a}
+  .chrom-row-wrap{margin-bottom:2px}
+  .row-note{font-size:11px;padding-left:76px;font-family:'Courier New',monospace;margin-bottom:4px}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="page-header">
+    <h1>Genetic <span>Algorithm</span> Explorer</h1>
+    <p>Step through how a genetic algorithm evolves a population toward the optimal solution.</p>
+    <div class="goal-chip">&#9654; Goal: maximize the number of 1s in each chromosome</div>
+  </div>
+
+  <div class="controls-card">
+    <div class="controls-grid">
+      <div class="ctrl">
+        <label>Chromosome length</label>
+        <input type="range" id="chromLen" min="6" max="16" step="1" value="10">
+        <span class="val" id="chromLenVal">10 genes</span>
+      </div>
+      <div class="ctrl">
+        <label>Population size</label>
+        <input type="range" id="popSize" min="4" max="12" step="2" value="6">
+        <span class="val" id="popSizeVal">6</span>
+      </div>
+      <div class="ctrl">
+        <label>Mutation rate</label>
+        <input type="range" id="mutRate" min="0" max="50" step="5" value="15">
+        <span class="val" id="mutRateVal">15%</span>
+      </div>
+      <div class="ctrl">
+        <label>Crossover rate</label>
+        <input type="range" id="crossRate" min="40" max="100" step="5" value="80">
+        <span class="val" id="crossRateVal">80%</span>
+      </div>
+      <div class="ctrl">
+        <label>Elitism (keep best N)</label>
+        <input type="range" id="eliteCount" min="0" max="4" step="1" value="1">
+        <span class="val" id="eliteCountVal">1</span>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="primary" id="btnInit">&#9654; Initialize</button>
+      <button id="btnStep" disabled>&#8594; Next step</button>
+      <button id="btnGen" disabled>&#9654;&#9654; Full generation</button>
+      <button id="btnAuto" disabled>&#9654;&#9654; Auto-run</button>
+      <button class="danger" id="btnReset" disabled>&#10005; Reset</button>
+    </div>
+  </div>
+
+  <div class="steps-nav" id="stepsNav">
+    <button class="step-tab" id="tab0">1. Population</button>
+    <button class="step-tab" id="tab1">2. Fitness</button>
+    <button class="step-tab" id="tab2">3. Selection</button>
+    <button class="step-tab" id="tab3">4. Crossover</button>
+    <button class="step-tab" id="tab4">5. Mutation</button>
+    <button class="step-tab" id="tab5">6. New gen</button>
+  </div>
+
+  <div id="panelStats"></div>
+  <div id="solvedBanner"></div>
+  <div id="panelMain">
+    <div class="empty-state">
+      <div class="big">&#129516;</div>
+      <h3>Ready to evolve</h3>
+      <p>Adjust the parameters above, then click <strong>Initialize</strong><br>to create the first population and start exploring.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let state = null, autoTimer = null, autoRunning = false;
+
+function rng(n){ return Math.floor(Math.random()*n); }
+function randChrom(len){ return Array.from({length:len},()=>Math.random()<.5?1:0); }
+function calcFitness(genes){ return genes.filter(g=>g===1).length; }
+
+function initState(){
+  if(autoRunning) toggleAuto();
+  const len=+$('chromLen').value, pop=+$('popSize').value;
+  state={
+    len, pop,
+    mutRate: +$('mutRate').value/100,
+    crossRate: +$('crossRate').value/100,
+    elite: +$('eliteCount').value,
+    generation: 1,
+    population: Array.from({length:pop},(_,i)=>({id:i, genes:randChrom(len), fitness:0, role:''})),
+    // displayStep drives which panel to show (separate from logic step)
+    displayStep: 0,
+    // stored intermediate results
+    elites:[], parents:[], crossoverData:[], children:[], mutations:[],
+    done: false
+  };
+  state.population.forEach(c=>c.fitness=calcFitness(c.genes));
+  $('btnStep').disabled=false; $('btnGen').disabled=false;
+  $('btnAuto').disabled=false; $('btnReset').disabled=false;
+  renderAll();
+}
+
+function stepGA(){
+  if(!state||state.done) return;
+  const s=state;
+  const ds=s.displayStep;
+
+  if(ds===0){
+    // show fitness panel
+    s.population.forEach(c=>c.fitness=calcFitness(c.genes));
+    s.displayStep=1;
+
+  } else if(ds===1){
+    // perform selection, show selection panel
+    const sorted=[...s.population].sort((a,b)=>b.fitness-a.fitness);
+    s.elites=sorted.slice(0,s.elite).map(c=>({...c,role:'elite'}));
+
+    // We need enough parents to fill (pop - elite) child slots.
+    // Select an even number of parents so they pair up cleanly.
+    const needed=s.pop-s.elite;
+    const numParents=needed%2===0 ? needed : needed+1;
+    s.parents=[];
+    for(let i=0;i<numParents;i++){
+      // Tournament: pick 2 distinct chromosomes by index, fitter one wins
+      let idxA=rng(s.pop), idxB=rng(s.pop);
+      if(s.pop>1 && idxA===idxB) idxB=(idxA+1+rng(s.pop-1))%s.pop;
+      const a=s.population[idxA], b=s.population[idxB];
+      const winner=(a.fitness>=b.fitness)?a:b;
+      s.parents.push({...winner, role:'parent'});
+    }
+    // Shuffle parents so the pairing (0,1),(2,3),... is random
+    for(let i=s.parents.length-1;i>0;i--){
+      const j=rng(i+1);
+      [s.parents[i],s.parents[j]]=[s.parents[j],s.parents[i]];
+    }
+    // Ensure no pair has the same source id — swap p2 with a later element if needed
+    for(let i=0;i<s.parents.length-1;i+=2){
+      if(s.parents[i].id===s.parents[i+1].id){
+        // find a later slot with a different id to swap in
+        let swapIdx=-1;
+        for(let k=i+2;k<s.parents.length;k++){
+          if(s.parents[k].id!==s.parents[i].id){ swapIdx=k; break; }
+        }
+        if(swapIdx!==-1){
+          [s.parents[i+1],s.parents[swapIdx]]=[s.parents[swapIdx],s.parents[i+1]];
+        }
+        // if all parents have the same id (tiny population / all equal fitness),
+        // we can't avoid it — leave as-is
+      }
+    }
+    s.displayStep=2;
+
+  } else if(ds===2){
+    // perform crossover, show crossover panel
+    // Parents are already in pairs: (0,1), (2,3), (4,5), ...
+    // Each pair produces 2 children; we keep only the first `needed`.
+    s.crossoverData=[]; s.children=[];
+    const needed=s.pop-s.elite;
+    const numPairs=s.parents.length/2; // always integer (we ensured even count)
+    for(let i=0;i<numPairs;i++){
+      const p1=s.parents[i*2];
+      const p2=s.parents[i*2+1];
+      const doCross=Math.random()<s.crossRate;
+      let c1g, c2g, pt=null;
+      if(doCross && s.len>2){
+        pt=1+rng(s.len-2);
+        c1g=[...p1.genes.slice(0,pt),...p2.genes.slice(pt)];
+        c2g=[...p2.genes.slice(0,pt),...p1.genes.slice(pt)];
+      } else {
+        c1g=[...p1.genes];
+        c2g=[...p2.genes];
+      }
+      s.crossoverData.push({p1,p2,pt,c1g,c2g,crossed:doCross});
+      s.children.push({id:s.pop+i*2,   genes:[...c1g],role:'child'});
+      s.children.push({id:s.pop+i*2+1, genes:[...c2g],role:'child'});
+    }
+    // Trim to exactly `needed` children (drop the extra if needed was odd)
+    s.children=s.children.slice(0,needed);
+    s.displayStep=3;
+
+  } else if(ds===3){
+    // perform mutation, show mutation panel
+    // save pre-mutation genes for comparison
+    s.children.forEach(c=>c.genesBeforeMut=[...c.genes]);
+    s.mutations=[];
+    s.children.forEach(c=>{
+      const muts=[];
+      c.genes=c.genes.map((g,gi)=>{
+        if(Math.random()<s.mutRate){ muts.push(gi); return 1-g; }
+        return g;
+      });
+      s.mutations.push(muts);
+    });
+    s.displayStep=4;
+
+  } else if(ds===4){
+    // build new generation, show new-gen panel
+    const newPop=[
+      ...s.elites.map(c=>({...c,role:'elite'})),
+      ...s.children.map(c=>({...c,role:'child'}))
+    ];
+    newPop.forEach((c,i)=>{c.id=i; c.fitness=calcFitness(c.genes);});
+    s.population=newPop;
+    s.generation++;
+    s.elites=[]; s.parents=[]; s.crossoverData=[]; s.children=[]; s.mutations=[];
+    s.displayStep=5;
+    if(Math.max(...s.population.map(c=>c.fitness))===s.len) s.done=true;
+
+  } else if(ds===5){
+    // start next generation
+    s.population.forEach(c=>c.fitness=calcFitness(c.genes));
+    s.displayStep=0;
+  }
+
+  renderAll();
+}
+
+function fullGen(){
+  if(!state) return;
+  // run steps until we complete a full cycle (back to step 0, or 5→next)
+  const startDs=state.displayStep;
+  let count=0;
+  do{
+    stepGA(); count++;
+    if(count>20||state.done) break;
+  } while(!(state.displayStep===5));
+  if(!state.done) renderAll();
+}
+
+function toggleAuto(){
+  autoRunning=!autoRunning;
+  $('btnAuto').textContent=autoRunning?'⏸ Pause':'▶▶ Auto-run';
+  if(autoRunning){
+    autoTimer=setInterval(()=>{
+      if(!state||state.done){clearInterval(autoTimer);autoRunning=false;$('btnAuto').textContent='▶▶ Auto-run';return;}
+      stepGA();
+    },700);
+  } else clearInterval(autoTimer);
+}
+
+function reset(){
+  if(autoRunning) toggleAuto();
+  state=null;
+  $('panelMain').innerHTML='<div class="empty-state"><div class="big">&#129516;</div><h3>Ready to evolve</h3><p>Click <strong>Initialize</strong> to create the first population.</p></div>';
+  $('panelStats').innerHTML='';
+  $('solvedBanner').innerHTML='';
+  $('btnStep').disabled=true;$('btnGen').disabled=true;
+  $('btnAuto').disabled=true;$('btnReset').disabled=true;
+  for(let i=0;i<6;i++) $('tab'+i).className='step-tab';
+}
+
+// ---- render ----
+
+function genesHtml(genes, highlights=[], segPt=null, segSide=null){
+  // segSide: 'a' colors left of pt as seg-a, right as seg-b; 'b' the opposite
+  return genes.map((g,i)=>{
+    let cls='';
+    if(highlights.includes(i)){
+      cls='mut';
+    } else if(segPt!==null){
+      const inLeft=(i<segPt);
+      if(segSide==='a') cls=inLeft?'seg-a':'seg-b';
+      else if(segSide==='b') cls=inLeft?'seg-b':'seg-a';
+      else cls=inLeft?'seg-a':'seg-b';
+    } else {
+      cls=g===1?'one':'zero';
+    }
+    return `<div class="gene ${cls}">${g}</div>`;
+  }).join('');
+}
+
+function chromRowHtml(c,showFitness=false,highlights=[],label='',segPt=null,segSide=null){
+  const lbl=label||(c.id!==undefined?`#${c.id+1}`:'?');
+  const fit=c.fitness!==undefined?c.fitness:calcFitness(c.genes);
+  const pct=Math.round(fit/state.len*100);
+  const gHtml=genesHtml(c.genes,highlights,segPt,segSide);
+  const roleBadge=
+    c.role==='elite'  ?`<span class="badge elite">&#9733; elite</span>`  :
+    c.role==='parent' ?`<span class="badge parent">&#9829; parent</span>`:
+    c.role==='child'  ?`<span class="badge child">&#10022; child</span>` :'';
+  return `<div class="chrom-row">
+    <span class="chrom-label">${lbl}</span>
+    <div class="genes">${gHtml}</div>
+    ${showFitness?`<div class="fitness-bar-wrap"><div class="fitness-bar" style="width:${pct}%"></div></div><span class="fitness-num">${fit}/${state.len}</span>`:''}
+    ${roleBadge}
+  </div>`;
+}
+
+function renderAll(){
+  if(!state) return;
+  updateTabs();
+  renderStats();
+  renderSolved();
+  const panels=[
+    renderPopPanel,
+    renderFitnessPanel,
+    renderSelectionPanel,
+    renderCrossoverPanel,
+    renderMutationPanel,
+    renderNewGenPanel
+  ];
+  (panels[state.displayStep]||panels[0])();
+  if(state.done){
+    $('btnStep').disabled=true;$('btnGen').disabled=true;$('btnAuto').disabled=true;
+  }
+}
+
+function updateTabs(){
+  const ds=state.displayStep;
+  for(let i=0;i<6;i++){
+    const t=$('tab'+i);
+    if(state.done){ t.className='step-tab done'; continue; }
+    t.className='step-tab'+(i===ds?' active':i<ds?' done':'');
+  }
+}
+
+function renderStats(){
+  if(!state) return;
+  const fits=state.population.map(c=>c.fitness);
+  const best=Math.max(...fits);
+  const avg=(fits.reduce((a,b)=>a+b,0)/fits.length).toFixed(1);
+  $('panelStats').innerHTML=`<div class="stats-row">
+    <div class="stat-card"><div class="sv">${state.generation}</div><div class="sl">Generation</div></div>
+    <div class="stat-card"><div class="sv">${best}/${state.len}</div><div class="sl">Best fitness</div></div>
+    <div class="stat-card"><div class="sv">${avg}</div><div class="sl">Avg fitness</div></div>
+    <div class="stat-card"><div class="sv">${Math.round(state.mutRate*100)}%</div><div class="sl">Mutation rate</div></div>
+    <div class="stat-card"><div class="sv">${Math.round(state.crossRate*100)}%</div><div class="sl">Crossover rate</div></div>
+  </div>`;
+}
+
+function renderSolved(){
+  $('solvedBanner').innerHTML=state.done?`<div class="solved-banner">
+    <h2>&#127942; Solved in generation ${state.generation-1}!</h2>
+    <p>The algorithm evolved a perfect chromosome — all genes are 1. Natural selection works!</p>
+  </div>`:'';
+}
+
+function renderPopPanel(){
+  $('panelMain').innerHTML=`<div class="panel-card">
+    <div class="step-header"><div class="step-dot active">1</div><h3>Initial population</h3><span class="gen-badge">gen ${state.generation}</span></div>
+    <div class="explain-box">
+      Each <strong>chromosome</strong> is a sequence of <strong>genes</strong> (binary bits: 0 or 1).
+      The algorithm starts with a <strong>randomly generated population</strong>.
+      &nbsp; <span style="display:inline-block;width:12px;height:12px;background:var(--blue-bg);border:1px solid rgba(48,112,208,.3);border-radius:2px;vertical-align:middle"></span> gene=1
+      &nbsp; <span style="display:inline-block;width:12px;height:12px;background:var(--bg2);border:1px solid var(--border);border-radius:2px;vertical-align:middle"></span> gene=0
+    </div>
+    <div class="chrom-grid">${state.population.map(c=>chromRowHtml(c,true)).join('')}</div>
+  </div>`;
+}
+
+function renderFitnessPanel(){
+  const sorted=[...state.population].sort((a,b)=>b.fitness-a.fitness);
+  $('panelMain').innerHTML=`<div class="panel-card">
+    <div class="step-header"><div class="step-dot active">2</div><h3>Fitness evaluation</h3></div>
+    <div class="explain-box">
+      The <strong>fitness function</strong> counts the number of 1s in each chromosome — that is the score.
+      Ranked best &rarr; worst. The bar shows fitness relative to the maximum possible (${state.len}).
+    </div>
+    <div class="chrom-grid">${sorted.map(c=>chromRowHtml(c,true)).join('')}</div>
+  </div>`;
+}
+
+function renderSelectionPanel(){
+  const sorted=[...state.population].sort((a,b)=>b.fitness-a.fitness);
+  const eliteIds=new Set(state.elites.map(c=>c.id));
+  // count parent selections per original id (a chromosome can be selected multiple times)
+  const parentCount={};
+  state.parents.forEach(p=>{ parentCount[p.id]=(parentCount[p.id]||0)+1; });
+
+  const numPairs=state.parents.length/2;
+  const needed=state.pop-state.elite;
+
+  const rows=sorted.map(c=>{
+    let role='';
+    if(eliteIds.has(c.id)) role='elite';
+    else if(parentCount[c.id]) role='parent';
+    const times=parentCount[c.id]||0;
+    const timesLabel=times>1?` <span style="font-size:10px;color:var(--green-text);font-family:'Courier New',monospace;font-weight:700">(x${times})</span>`:'';
+    return chromRowHtml({...c,role},true)+(role==='parent'&&times>0?timesLabel:'');
+  });
+
+  const pairLines=Array.from({length:numPairs},(_,i)=>{
+    const p1=state.parents[i*2], p2=state.parents[i*2+1];
+    return `Pair ${i+1}: #${p1.id+1} (fit=${p1.fitness}) &times; #${p2.id+1} (fit=${p2.fitness})`;
+  }).join('<br>');
+
+  $('panelMain').innerHTML=`<div class="panel-card">
+    <div class="step-header"><div class="step-dot active">3</div><h3>Selection + elitism</h3></div>
+    <div class="explain-box">
+      <strong>Elitism:</strong> the top ${state.elite} chromosome(s) pass unchanged — the best solution is never lost.<br><br>
+      <strong>Tournament selection:</strong> two distinct random chromosomes compete; the fitter one wins.
+      We select <strong>${state.parents.length} parents</strong> (${numPairs} pairs) to produce ${needed} children.
+      A chromosome can win multiple tournaments.
+    </div>
+    <div class="chrom-grid">${rows.join('')}</div>
+    <div style="margin-top:14px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:'Courier New',monospace;color:var(--text2)">
+      <strong style="color:var(--text)">Parent pairs for crossover:</strong><br>${pairLines}
+    </div>
+    <div class="legend-row" style="margin-top:12px">
+      <span class="badge elite">&#9733; elite</span><span style="font-size:12px;color:var(--text2)">kept intact</span>
+      <span class="badge parent" style="margin-left:8px">&#9829; parent</span><span style="font-size:12px;color:var(--text2)">selected to reproduce</span>
+    </div>
+  </div>`;
+}
+
+function renderCrossoverPanel(){
+  const s=state;
+  if(!s.crossoverData||s.crossoverData.length===0){
+    $('panelMain').innerHTML=`<div class="panel-card"><div class="step-header"><div class="step-dot active">4</div><h3>Crossover</h3></div><div class="explain-box">No crossover data yet — click Next step from the Selection panel.</div></div>`;
+    return;
+  }
+  let pairsHtml='';
+  s.crossoverData.forEach((pair,idx)=>{
+    const {p1,p2,pt,c1g,c2g,crossed}=pair;
+    if(crossed && pt!==null){
+      // show segmented parents and children
+      const p1Html=genesHtml(p1.genes,[],pt,'a');
+      const p2Html=genesHtml(p2.genes,[],pt,'b');
+      const c1Html=genesHtml(c1g,[],pt,'a');  // left=A, right=B
+      const c2Html=genesHtml(c2g,[],pt,'b');  // left=B, right=A — inverse
+
+      pairsHtml+=`<div class="co-pair">
+        <div class="co-pair-label">Pair ${idx+1} of ${s.crossoverData.length} &mdash; cut at gene ${pt} &nbsp;<span style="color:var(--green-text);font-size:10px">&#10003; crossed over</span></div>
+        <div class="chrom-row"><span class="chrom-label">parent A</span><div class="genes">${p1Html}</div></div>
+        <div class="chrom-row"><span class="chrom-label">parent B</span><div class="genes">${p2Html}</div></div>
+        <div class="co-divider">&#9986;&nbsp; cut at position ${pt} &mdash; swap right halves &darr;</div>
+        <div class="chrom-row"><span class="chrom-label">child 1</span><div class="genes">${c1Html}</div><span class="badge child" style="margin-left:8px">&#10022; child</span></div>
+        <div class="chrom-row"><span class="chrom-label">child 2</span><div class="genes">${c2Html}</div><span class="badge child" style="margin-left:8px">&#10022; child</span></div>
+      </div>`;
+    } else {
+      // no crossover — children are clones of parents
+      const p1Html=genesHtml(p1.genes);
+      const p2Html=genesHtml(p2.genes);
+      pairsHtml+=`<div class="co-pair">
+        <div class="co-pair-label">Pair ${idx+1} of ${s.crossoverData.length} &mdash; <span style="color:var(--text3)">no crossover (probability not met)</span></div>
+        <div class="chrom-row"><span class="chrom-label">parent A</span><div class="genes">${p1Html}</div></div>
+        <div class="chrom-row"><span class="chrom-label">parent B</span><div class="genes">${p2Html}</div></div>
+        <div class="co-divider">&#8594; children are copies of parents (crossover did not happen)</div>
+        <div class="chrom-row"><span class="chrom-label">child 1</span><div class="genes">${genesHtml(c1g)}</div><span class="badge child" style="margin-left:8px">&#10022; copy</span></div>
+        <div class="chrom-row"><span class="chrom-label">child 2</span><div class="genes">${genesHtml(c2g)}</div><span class="badge child" style="margin-left:8px">&#10022; copy</span></div>
+      </div>`;
+    }
+  });
+
+  $('panelMain').innerHTML=`<div class="panel-card">
+    <div class="step-header"><div class="step-dot active">4</div><h3>Single-point crossover</h3></div>
+    <div class="explain-box">
+      Each parent pair has a <strong>${Math.round(s.crossRate*100)}%</strong> chance of crossing over.
+      If it happens, a random <strong>cut point</strong> is chosen — left of parent A + right of parent B forms child 1, and vice versa for child 2.
+      If no crossover, children are direct copies of parents (before mutation).
+    </div>
+    ${pairsHtml}
+    <div class="legend-row">
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--blue-bg);border:1px solid rgba(48,112,208,.3)"></div>segment from parent A</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--green-bg);border:1px solid rgba(26,107,26,.3)"></div>segment from parent B</div>
+    </div>
+  </div>`;
+}
+
+function renderMutationPanel(){
+  const s=state;
+  if(!s.children||s.children.length===0){
+    $('panelMain').innerHTML=`<div class="panel-card"><div class="step-header"><div class="step-dot active">5</div><h3>Mutation</h3></div><div class="explain-box">No children yet — run crossover first.</div></div>`;
+    return;
+  }
+
+  const rows=s.children.map((c,i)=>{
+    const muts=s.mutations[i]||[];
+    const hasMut=muts.length>0;
+    // Show current (post-mutation) genes with mut highlights
+    const gHtml=c.genes.map((g,j)=>{
+      const wasMutated=muts.includes(j);
+      return `<div class="gene ${wasMutated?'mut':g===1?'one':'zero'}">${g}</div>`;
+    }).join('');
+    const noteHtml=hasMut
+      ?`<div class="mut-note">&#9889; gene(s) flipped at position: ${muts.map(p=>p+1).join(', ')}</div>`
+      :`<div class="no-mut-note">no mutation this round</div>`;
+    return `<div class="chrom-row-wrap">
+      <div class="chrom-row">
+        <span class="chrom-label">child ${i+1}</span>
+        <div class="genes">${gHtml}</div>
+        <span class="fitness-num">${calcFitness(c.genes)}/${s.len}</span>
+        ${hasMut?'<span class="badge" style="background:var(--amber-bg);color:var(--amber-text);border:1px solid rgba(232,150,10,.3);margin-left:4px">&#9889; mutated</span>':''}
+      </div>
+      ${noteHtml}
+    </div>`;
+  });
+
+  $('panelMain').innerHTML=`<div class="panel-card">
+    <div class="step-header"><div class="step-dot active">5</div><h3>Mutation</h3></div>
+    <div class="explain-box">
+      Each gene has a <strong>${Math.round(s.mutRate*100)}%</strong> independent chance of flipping (0&rarr;1 or 1&rarr;0).
+      Mutation introduces <strong>new genetic diversity</strong>, preventing premature convergence on local optima.
+      <span style="display:inline-block;margin-top:4px"><span style="display:inline-block;width:12px;height:12px;background:var(--amber-bg);border:1px solid rgba(232,150,10,.5);border-radius:2px;outline:2px solid var(--amber-mid);outline-offset:1px;vertical-align:middle"></span> = mutated gene</span>
+    </div>
+    <div class="chrom-grid">${rows.join('')}</div>
+  </div>`;
+}
+
+function renderNewGenPanel(){
+  const s=state;
+  const sorted=[...s.population].sort((a,b)=>b.fitness-a.fitness);
+  const best=sorted[0];
+  $('panelMain').innerHTML=`<div class="panel-card">
+    <div class="step-header">
+      <div class="step-dot ${s.done?'done':'active'}">6</div>
+      <h3>New generation ${s.generation-1} &rarr; ${s.generation}</h3>
+      ${s.done?`<span class="badge solved">&#127942; solved!</span>`:''}
+    </div>
+    <div class="explain-box">
+      ${s.done
+        ?`The algorithm converged! The best chromosome scores ${best.fitness}/${s.len} — all genes are 1.`
+        :`Elites survived unchanged. Children fill the rest. Fitness typically improves each generation.
+          Click <strong>Next step</strong> to continue to the next generation's fitness evaluation.`}
+    </div>
+    <div class="chrom-grid">${sorted.map(c=>chromRowHtml(c,true)).join('')}</div>
+  </div>`;
+}
+
+// ---- slider bindings ----
+$('chromLen').oninput  = ()=>$('chromLenVal').textContent  = `${$('chromLen').value} genes`;
+$('popSize').oninput   = ()=>$('popSizeVal').textContent   = $('popSize').value;
+$('mutRate').oninput   = ()=>$('mutRateVal').textContent   = `${$('mutRate').value}%`;
+$('crossRate').oninput = ()=>$('crossRateVal').textContent = `${$('crossRate').value}%`;
+$('eliteCount').oninput= ()=>$('eliteCountVal').textContent= $('eliteCount').value;
+$('btnInit').onclick  = initState;
+$('btnStep').onclick  = stepGA;
+$('btnGen').onclick   = fullGen;
+$('btnAuto').onclick  = toggleAuto;
+$('btnReset').onclick = reset;
+</script>
+</body>
+</html>
