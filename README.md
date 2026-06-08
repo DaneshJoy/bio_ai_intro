@@ -4,7 +4,14 @@
 
 
 
-لیست ویدئوهای درس در آپارات:
+- لیست ویدئوهای درس در آپارات:
+  - https://www.aparat.com/playlist/24689763
 
-<a href="https://www.aparat.com/playlist/24689763" target="_blank">https://www.aparat.com/playlist/24689763</a>
+---
 
+## سرفصل‌ها
+
+- مفاهیم یادگیری ماشین
+- شبکه‌های عصبی مصنوعی
+- الگوریتم ژنتیک
+- منطق و سیستم فازی
