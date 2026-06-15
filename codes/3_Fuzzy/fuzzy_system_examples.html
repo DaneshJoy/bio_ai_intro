@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>منطق فازی - آموزش تعاملی</title>
+<style>
+  :root.light {
+    --bg: #f5f7fa;
+    --surface: #eef2f6;
+    --card: #ffffff;
+    --border: #d1d9e8;
+    --accent: #4a6eff;
+    --accent2: #ff6b8f;
+    --accent3: #4affa3;
+    --warm: #ffa500;
+    --hot: #ff5252;
+    --cold: #4a9eff;
+    --text: #1a1a2e;
+    --muted: #5a6a7a;
+  }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --card: #21253a;
+    --border: #2e3350;
+    --accent: #6c8fff;
+    --accent2: #ff6c8f;
+    --accent3: #6cffa3;
+    --warm: #ffb347;
+    --hot: #ff6b6b;
+    --cold: #6cb8ff;
+    --text: #e8eaf6;
+    --muted: #8892b0;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    direction: rtl;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 6px;
+  }
+  .subtitle { text-align: center; color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
+  .tabs {
+    display: flex;
+    gap: 6px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 6px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+  }
+  .tab {
+    flex: 1;
+    padding: 10px 6px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-family: inherit;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .tab.active { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .badge {
+    font-size: 0.68rem;
+    padding: 2px 7px;
+    border-radius: 20px;
+    background: rgba(108,143,255,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(108,143,255,0.3);
+  }
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .slider-label { color: var(--muted); font-size: 0.82rem; min-width: 72px; }
+  input[type=range] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+    outline: none;
+    min-width: 100px;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 3px solid var(--bg);
+    box-shadow: 0 0 8px rgba(108,143,255,0.5);
+  }
+  .slider-val { font-weight: 700; color: var(--accent); min-width: 50px; text-align: center; font-size: 0.95rem; }
+
+  .membership-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .mem-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    transition: border-color 0.3s;
+  }
+  .mem-label { font-size: 0.72rem; color: var(--muted); margin-bottom: 4px; }
+  .mem-value { font-size: 1.3rem; font-weight: 700; }
+  .mem-bar-wrap { height: 5px; background: var(--border); border-radius: 3px; margin-top: 7px; overflow: hidden; }
+  .mem-bar { height: 100%; border-radius: 3px; transition: width 0.3s; }
+
+  canvas { width: 100%; border-radius: 8px; display: block; background: var(--surface); }
+
+  .output-display {
+    background: linear-gradient(135deg, rgba(108,143,255,0.1), rgba(255,108,143,0.1));
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 14px;
+    text-align: center;
+    margin-bottom: 12px;
+    transition: border-color 0.4s;
+  }
+  .output-label { font-size: 0.82rem; color: var(--muted); margin-bottom: 4px; }
+  .output-value { font-size: 2.2rem; font-weight: 700; color: var(--accent); }
+  .output-unit { font-size: 0.85rem; color: var(--muted); }
+
+  .rule-list { display: flex; flex-direction: column; gap: 7px; }
+  .rule-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 11px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    transition: all 0.3s;
+    font-size: 0.82rem;
+  }
+  .rule-item.firing { border-color: var(--accent3); background: rgba(108,255,163,0.05); }
+  .rule-strength { min-width: 40px; height: 20px; border-radius: 4px; background: var(--border); overflow: hidden; position: relative; }
+  .rule-strength-fill { height: 100%; transition: width 0.3s, background 0.3s; background: var(--accent3); }
+  .rule-text { flex: 1; color: var(--muted); direction: ltr; font-family: monospace; font-size: 0.78rem; }
+  .rule-item.firing .rule-text { color: var(--text); }
+
+  /* theory */
+  .steps { counter-reset: step; }
+  .step { display: flex; gap: 12px; margin-bottom: 16px; align-items: flex-start; }
+  .step-num {
+    min-width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(108,143,255,0.15); border: 1px solid rgba(108,143,255,0.4);
+    color: var(--accent); display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.82rem; flex-shrink: 0;
+  }
+  .step-body { flex: 1; }
+  .step-title { font-weight: 600; margin-bottom: 4px; font-size: 0.9rem; }
+  .step-desc { color: var(--muted); font-size: 0.82rem; line-height: 1.6; }
+  .highlight { color: var(--accent); font-weight: 600; }
+
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .compare-card { border-radius: 10px; padding: 12px; border: 1px solid var(--border); }
+  .compare-card.classic { border-color: #ff6b6b; background: rgba(255,107,107,0.07); }
+  .compare-card.fuzzy   { border-color: var(--accent3); background: rgba(108,255,163,0.07); }
+  .compare-title { font-weight: 700; margin-bottom: 7px; font-size: 0.85rem; }
+  .compare-card.classic .compare-title { color: #ff6b6b; }
+  .compare-card.fuzzy   .compare-title { color: var(--accent3); }
+  .compare-body { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+
+  .risk-indicator {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 14px;
+    text-align: center;
+    border: 2px solid var(--border);
+    transition: border-color 0.4s;
+    margin-bottom: 12px;
+  }
+  .risk-label { font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; }
+  .risk-value { font-size: 1.7rem; font-weight: 700; }
+
+  @media (max-width: 500px) {
+    .membership-grid { grid-template-columns: 1fr; }
+    .compare-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+  <div style="position: fixed; top: 20px; left: 20px; z-index: 1000;">
+  <button id="theme-toggle" style="
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    padding: 8px 16px;
+    cursor: pointer;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+    backdrop-filter: blur(10px);
+  ">
+    🌙 Dark
+  </button>
+</div>
+
+<h1>منطق فازی</h1>
+<p class="subtitle">آموزش تعاملی با مثال‌های کاربردی</p>
+
+<div class="tabs">
+  <button class="tab active"  onclick="switchTab('fan')">🌡️ کنترل فن</button>
+  <button class="tab"         onclick="switchTab('medical')">❤️ ریسک پزشکی</button>
+  <button class="tab"         onclick="switchTab('theory')">📖 مفاهیم</button>
+</div>
+
+<!-- ===== TAB: FAN ===== -->
+<div id="tab-fan" class="tab-content active">
+
+  <div class="card">
+    <div class="card-title">🌡️ ورودی دما <span class="badge">اسلایدر را بکش</span></div>
+    <div class="slider-row">
+      <span class="slider-label">دما (°C)</span>
+      <input type="range" id="tempSlider" min="0" max="40" value="28" oninput="updateFan()">
+      <span class="slider-val" id="tempVal">28°C</span>
+    </div>
+    <div class="membership-grid">
+      <div class="mem-card" id="memCold">
+        <div class="mem-label">❄️ Cold</div>
+        <div class="mem-value" id="coldDeg" style="color:var(--cold)">0.00</div>
+        <div class="mem-bar-wrap"><div class="mem-bar" id="coldBar" style="background:var(--cold);width:0%"></div></div>
+      </div>
+      <div class="mem-card" id="memWarm">
+        <div class="mem-label">🌤️ Warm</div>
+        <div class="mem-value" id="warmDeg" style="color:var(--warm)">0.00</div>
+        <div class="mem-bar-wrap"><div class="mem-bar" id="warmBar" style="background:var(--warm);width:0%"></div></div>
+      </div>
+      <div class="mem-card" id="memHot">
+        <div class="mem-label">🔥 Hot</div>
+        <div class="mem-value" id="hotDeg" style="color:var(--hot)">0.00</div>
+        <div class="mem-bar-wrap"><div class="mem-bar" id="hotBar" style="background:var(--hot);width:0%"></div></div>
+      </div>
+    </div>
+    <!-- MF chart with vertical line -->
+    <canvas id="fanMFCanvas" height="170"></canvas>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⚡ قوانین فعال</div>
+    <div class="rule-list" id="ruleList">
+      <div class="rule-item" id="rule1">
+        <div class="rule-strength"><div class="rule-strength-fill" id="r1fill" style="width:0%"></div></div>
+        <div class="rule-text">IF Temp is Cold → Fan is Slow</div>
+      </div>
+      <div class="rule-item" id="rule2">
+        <div class="rule-strength"><div class="rule-strength-fill" id="r2fill" style="width:0%"></div></div>
+        <div class="rule-text">IF Temp is Warm → Fan is Medium</div>
+      </div>
+      <div class="rule-item" id="rule3">
+        <div class="rule-strength"><div class="rule-strength-fill" id="r3fill" style="width:0%"></div></div>
+        <div class="rule-text">IF Temp is Hot  → Fan is Fast</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="output-display" id="fanOutputBox">
+    <div class="output-label">سرعت فن (خروجی)</div>
+    <div class="output-value" id="fanOutput">--</div>
+    <div class="output-unit">درصد</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📊 خروجی Defuzzified — روش Centroid</div>
+    <canvas id="fanOutCanvas" height="150"></canvas>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🆚 کلاسیک vs فازی</div>
+    <div class="compare-grid">
+      <div class="compare-card classic">
+        <div class="compare-title">❌ منطق کلاسیک</div>
+        <div class="compare-body">فقط یک قانون فعال می‌شود. نتیجه جهش ناگهانی دارد.</div>
+      </div>
+      <div class="compare-card fuzzy">
+        <div class="compare-title">✅ منطق فازی</div>
+        <div class="compare-body">چند قانون همزمان فعال می‌شوند با وزن‌های مختلف. نتیجه نرم و پیوسته است.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB: MEDICAL ===== -->
+<div id="tab-medical" class="tab-content">
+
+  <!-- Heart Rate -->
+  <div class="card">
+    <div class="card-title">❤️ ضربان قلب (Heart Rate) <span class="badge">ورودی ۱ — ذوزنقه‌ای</span></div>
+    <div class="slider-row">
+      <span class="slider-label">bpm</span>
+      <input type="range" id="hrSlider" min="40" max="160" value="110" oninput="updateMedical()">
+      <span class="slider-val" id="hrVal">110 bpm</span>
+    </div>
+    <div class="membership-grid">
+      <div class="mem-card">
+        <div class="mem-label">🟢 Low</div>
+        <div class="mem-value" id="hrLowDeg" style="color:var(--cold)">0.00</div>
+        <div class="mem-bar-wrap"><div class="mem-bar" id="hrLowBar" style="background:var(--cold);width:0%"></div></div>
+      </div>
+      <div class="mem-card">
+        <div class="mem-label">🟡 Medium</div>
+        <div class="mem-value" id="hrMedDeg" style="color:var(--warm)">0.00</div>
+        <div class="mem-bar-wrap"><div class="mem-bar" id="hrMedBar" style="background:var(--warm);width:0%"></div></div>
+      </div>
+      <div class="mem-card">
+        <div class="mem-label">🔴 High</div>
+        <div class="mem-value" id="hrHighDeg" style="color:var(--hot)">0.00</div>
+        <div class="mem-bar-wrap"><div class="mem-bar" id="hrHighBar" style="background:var(--hot);width:0%"></div></div>
+      </div>
+    </div>
+    <canvas id="hrMFCanvas" height="160"></canvas>
+  </div>
+
+  <!-- Blood Pressure -->
+  <div class="card">
+    <div class="card-title">🩸 فشار خون سیستولیک (Blood Pressure) <span class="badge">ورودی ۲ — ذوزنقه‌ای</span></div>
+    <div class="slider-row">
+      <span class="slider-label">mmHg</span>
+      <input type="range" id="bpSlider" min="80" max="200" value="150" oninput="updateMedical()">
+      <span class="slider-val" id="bpVal">150 mmHg</span>
+    </div>
+    <div class="membership-grid">
+      <div class="mem-card">
+        <div class="mem-label">🟢 Normal</div>
+        <div class="mem-value" id="bpNormDeg" style="color:var(--cold)">0.00</div>
+        <div class="mem-bar-wrap"><div class="mem-bar" id="bpNormBar" style="background:var(--cold);width:0%"></div></div>
+      </div>
+      <div class="mem-card">
+        <div class="mem-label">🟡 Elevated</div>
+        <div class="mem-value" id="bpElevDeg" style="color:var(--warm)">0.00</div>
+        <div class="mem-bar-wrap"><div class="mem-bar" id="bpElevBar" style="background:var(--warm);width:0%"></div></div>
+      </div>
+      <div class="mem-card">
+        <div class="mem-label">🔴 High</div>
+        <div class="mem-value" id="bpHighDeg" style="color:var(--hot)">0.00</div>
+        <div class="mem-bar-wrap"><div class="mem-bar" id="bpHighBar" style="background:var(--hot);width:0%"></div></div>
+      </div>
+    </div>
+    <canvas id="bpMFCanvas" height="160"></canvas>
+  </div>
+
+  <!-- Rules -->
+  <div class="card">
+    <div class="card-title">⚡ قوانین فازی پزشکی</div>
+    <div class="rule-list">
+      <div class="rule-item" id="mr1">
+        <div class="rule-strength"><div class="rule-strength-fill" id="mr1fill" style="width:0%"></div></div>
+        <div class="rule-text">Rule 1: IF HR is Low AND BP is Normal → Risk is Low</div>
+      </div>
+      <div class="rule-item" id="mr2">
+        <div class="rule-strength"><div class="rule-strength-fill" id="mr2fill" style="width:0%"></div></div>
+        <div class="rule-text">Rule 2: IF HR is Medium AND BP is Elevated → Risk is Medium</div>
+      </div>
+      <div class="rule-item" id="mr3">
+        <div class="rule-strength"><div class="rule-strength-fill" id="mr3fill" style="width:0%"></div></div>
+        <div class="rule-text">Rule 3: IF HR is High OR BP is High → Risk is High</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Risk output -->
+  <div class="risk-indicator" id="riskIndicator">
+    <div class="risk-label">سطح ریسک (Risk Level)</div>
+    <div class="risk-value" id="riskValue">--</div>
+    <div style="font-size:0.78rem;color:var(--muted);margin-top:4px" id="riskDesc">—</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📊 خروجی ریسک — Centroid</div>
+    <canvas id="riskOutCanvas" height="150"></canvas>
+  </div>
+
+</div>
+
+<!-- ===== TAB: THEORY ===== -->
+<div id="tab-theory" class="tab-content">
+  <div class="card">
+    <div class="card-title">📖 چهار مرحله سیستم فازی</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">۱</div>
+        <div class="step-body">
+          <div class="step-title">فازی‌سازی (Fuzzification)</div>
+          <div class="step-desc">مقدار دقیق (مثلاً <span class="highlight">28°C</span>) به درجات عضویت در مجموعه‌های زبانی تبدیل می‌شود.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">۲</div>
+        <div class="step-body">
+          <div class="step-title">پایگاه قوانین (Rule Base)</div>
+          <div class="step-desc">قوانین IF...THEN که توسط کارشناس تعریف می‌شوند. چند قانون می‌توانند همزمان فعال باشند.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">۳</div>
+        <div class="step-body">
+          <div class="step-title">استنتاج (Inference)</div>
+          <div class="step-desc">هر قانون بر اساس درجه عضویت وزن می‌گیرد. AND = min، OR = max.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">۴</div>
+        <div class="step-body">
+          <div class="step-title">قطعی‌سازی (Defuzzification)</div>
+          <div class="step-desc">خروجی فازی با روش <span class="highlight">Centroid</span> به عدد دقیق تبدیل می‌شود.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📐 توابع عضویت رایج</div>
+    <canvas id="mfTypesCanvas" height="190"></canvas>
+    <div style="margin-top:10px;display:flex;gap:14px;flex-wrap:wrap;font-size:0.78rem;color:var(--muted)">
+      <span style="color:var(--accent)">■</span> مثلثی (Triangular)
+      <span style="color:var(--warm)">■</span> ذوزنقه‌ای (Trapezoidal)
+      <span style="color:var(--accent3)">■</span> گاوسی (Gaussian)
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">💡 نکات کلیدی</div>
+    <div class="rule-list">
+      <div class="rule-item" style="flex-direction:column;align-items:flex-start;gap:4px">
+        <span style="font-weight:600;font-size:0.88rem">عضویت جزئی</span>
+        <span style="color:var(--muted);font-size:0.8rem">یک عنصر می‌تواند همزمان در چند مجموعه با درجات مختلف عضو باشد.</span>
+      </div>
+      <div class="rule-item" style="flex-direction:column;align-items:flex-start;gap:4px">
+        <span style="font-weight:600;font-size:0.88rem">AND = min | OR = max</span>
+        <span style="color:var(--muted);font-size:0.8rem">در استنتاج Mamdani، AND معادل حداقل و OR معادل حداکثر است.</span>
+      </div>
+      <div class="rule-item" style="flex-direction:column;align-items:flex-start;gap:4px">
+        <span style="font-weight:600;font-size:0.88rem">ذوزنقه‌ای vs مثلثی</span>
+        <span style="color:var(--muted);font-size:0.8rem">ذوزنقه‌ای یک ناحیه «کاملاً عضو» دارد که مناسب مقادیر پزشکی است.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========================
+// Membership Functions
+// ========================
+function trimf(x, a, b, c) {
+  if (x <= a || x >= c) return 0;
+  if (x === b) return 1;
+  if (x < b) return (x - a) / (b - a);
+  return (c - x) / (c - b);
+}
+
+function trapmf(x, a, b, c, d) {
+  // rises a→b, flat b→c, falls c→d
+  if (x <= a || x >= d) return 0;
+  if (x >= b && x <= c) return 1;
+  if (x < b) return (x - a) / (b - a);
+  return (d - x) / (d - c);
+}
+
+function gaussian(x, mean, sigma) {
+  return Math.exp(-0.5 * ((x - mean) / sigma) ** 2);
+}
+
+// ========================
+// Canvas helpers
+// ========================
+function setupCanvas(id, H) {
+  const canvas = document.getElementById(id);
+  const W = canvas.offsetWidth || 420;
+  canvas.width = W; canvas.height = H;
+  return { canvas, ctx: canvas.getContext('2d'), W, H };
+}
+
+function drawGrid(ctx, pad, innerW, innerH, H) {
+  ctx.strokeStyle = '#2e3350'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad + innerH * i / 4;
+    ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(pad + innerW, y); ctx.stroke();
+  }
+}
+
+function axisLabels(ctx, pad, innerW, innerH, H, minV, maxV, steps) {
+  ctx.fillStyle = '#8892b0'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+  for (let i = 0; i <= steps; i++) {
+    const v = minV + i * (maxV - minV) / steps;
+    const x = pad + (i / steps) * innerW;
+    ctx.fillText(Math.round(v), x, H - 2);
+  }
+  ctx.textAlign = 'right';
+  ['1.0','0.5','0.0'].forEach((label, i) => {
+    ctx.fillText(label, pad - 4, pad + innerH * i / 2 + 4);
+  });
+}
+
+function drawVerticalLine(ctx, x, pad, innerH, color, dashed) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.strokeStyle = color; ctx.lineWidth = 1.8;
+  if (dashed) ctx.setLineDash([4, 3]);
+  ctx.moveTo(x, pad); ctx.lineTo(x, pad + innerH);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
+function drawDot(ctx, x, y, color, r = 5) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = color; ctx.fill();
+}
+
+function drawCurve(ctx, minV, maxV, pad, innerW, innerH, fn, color, lineWidth = 2) {
+  ctx.beginPath();
+  ctx.strokeStyle = color; ctx.lineWidth = lineWidth;
+  const steps = Math.max(300, Math.round(maxV - minV) * 3);
+  for (let i = 0; i <= steps; i++) {
+    const v = minV + i * (maxV - minV) / steps;
+    const x = pad + ((v - minV) / (maxV - minV)) * innerW;
+    const y = pad + (1 - fn(v)) * innerH;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+}
+
+function drawFilledOutput(ctx, pad, innerW, innerH, clamp, fn, color) {
+  if (clamp < 0.005) return;
+  ctx.beginPath(); ctx.fillStyle = color;
+  ctx.moveTo(pad, pad + innerH);
+  for (let v = 0; v <= 100; v++) {
+    const agg = Math.min(clamp, fn(v));
+    ctx.lineTo(pad + (v / 100) * innerW, pad + (1 - agg) * innerH);
+  }
+  ctx.lineTo(pad + innerW, pad + innerH);
+  ctx.closePath(); ctx.fill();
+}
+
+// ========================
+// FAN CONTROL
+// ========================
+const fanMFs = [
+  { key: 'cold', label: 'Cold', color: '#6cb8ff', fn: v => trimf(v, 0, 0, 20), peak: 0 },
+  { key: 'warm', label: 'Warm', color: '#ffb347', fn: v => trimf(v, 10, 20, 30), peak: 20 },
+  { key: 'hot',  label: 'Hot',  color: '#ff6b6b', fn: v => trimf(v, 20, 40, 40), peak: 40 },
+];
+
+function fanDefuzz(cold, warm, hot) {
+  let num = 0, den = 0;
+  const clamps = [cold, warm, hot];
+  const outMFs = [
+    v => trimf(v, 0, 0, 50),
+    v => trimf(v, 25, 50, 75),
+    v => trimf(v, 50, 100, 100),
+  ];
+  for (let fs = 0; fs <= 100; fs += 0.5) {
+    const agg = Math.max(...clamps.map((c, i) => Math.min(c, outMFs[i](fs))));
+    num += fs * agg; den += agg;
+  }
+  return den === 0 ? 50 : num / den;
+}
+
+function updateFan() {
+  const t = +document.getElementById('tempSlider').value;
+  document.getElementById('tempVal').textContent = t + '°C';
+
+  const degs = fanMFs.map(m => m.fn(t));
+  const labels = ['cold','warm','hot'];
+  const colors = ['var(--cold)', 'var(--warm)', 'var(--hot)'];
+  degs.forEach((d, i) => {
+    document.getElementById(labels[i]+'Deg').textContent = d.toFixed(2);
+    document.getElementById(labels[i]+'Bar').style.width = (d * 100) + '%';
+  });
+
+  [1,2,3].forEach((n, i) => {
+    document.getElementById('r'+n+'fill').style.width = (degs[i]*100)+'%';
+    document.getElementById('rule'+n).classList.toggle('firing', degs[i] > 0.01);
+  });
+
+  const fanVal = fanDefuzz(degs[0], degs[1], degs[2]);
+  document.getElementById('fanOutput').textContent = fanVal.toFixed(1);
+
+  drawFanMF(t, degs);
+  drawFanOutput(degs, fanVal);
+}
+
+function drawFanMF(t, degs) {
+  const { ctx, W, H } = setupCanvas('fanMFCanvas', 170);
+  const pad = 32, innerW = W - pad * 2, innerH = H - 30;
+  ctx.clearRect(0, 0, W, H);
+  drawGrid(ctx, pad, innerW, innerH, H);
+  axisLabels(ctx, pad, innerW, innerH, H, 0, 40, 4);
+
+  fanMFs.forEach((mf, i) => {
+    drawCurve(ctx, 0, 40, pad, innerW, innerH, mf.fn, mf.color, 2.5);
+    ctx.fillStyle = mf.color; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+    const px = pad + (mf.peak / 40) * innerW;
+    ctx.fillText(mf.label, px, pad - 3);
+  });
+
+  // Vertical input line
+  const tx = pad + (t / 40) * innerW;
+  drawVerticalLine(ctx, tx, pad, innerH, '#aaaaaa', true);
+
+  // Dots at intersections
+  fanMFs.forEach((mf, i) => {
+    if (degs[i] > 0.005) {
+      drawDot(ctx, tx, pad + (1 - degs[i]) * innerH, mf.color);
+    }
+  });
+
+  // Label
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(t + '°C', tx, pad + innerH + 14);
+}
+
+
+function drawFanOutput(degs, defuzzVal) {
+  const { ctx, W, H } = setupCanvas('fanOutCanvas', 150);
+  const pad = 32, innerW = W - pad * 2, innerH = H - 28;
+  ctx.clearRect(0, 0, W, H);
+  drawGrid(ctx, pad, innerW, innerH, H);
+  axisLabels(ctx, pad, innerW, innerH, H, 0, 100, 4);
+
+  const outMFs = [
+    { clamp: degs[0], color: '#6cb8ff55', fn: v => trimf(v, 0, 0, 50) },
+    { clamp: degs[1], color: '#ffb34755', fn: v => trimf(v, 25, 50, 75) },
+    { clamp: degs[2], color: '#ff6b6b55', fn: v => trimf(v, 50, 100, 100) },
+  ];
+  outMFs.forEach(m => drawFilledOutput(ctx, pad, innerW, innerH, m.clamp, m.fn, m.color));
+
+  // Centroid line
+  const dx = pad + (defuzzVal / 100) * innerW;
+  drawVerticalLine(ctx, dx, pad, innerH, '#aaaaaa', true);
+  ctx.fillStyle = '#aaaaaa'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Centroid: ' + defuzzVal.toFixed(1) + '%', dx, pad - 4);
+  drawDot(ctx, dx, pad + innerH, '#aaaaaa', 4);
+}
+
+// ========================
+// MEDICAL (Trapezoidal)
+// ========================
+
+// Heart Rate trapezoidal MFs [40,160]
+const hrMFsDef = [
+  { label: 'Low',    color: '#6cb8ff', fn: v => trapmf(v, 40, 40, 65, 85) },
+  { label: 'Medium', color: '#ffb347', fn: v => trapmf(v, 60, 80, 105, 125) },
+  { label: 'High',   color: '#ff6b6b', fn: v => trapmf(v, 100, 125, 160, 160) },
+];
+
+// Blood Pressure trapezoidal MFs [80,200]
+const bpMFsDef = [
+  { label: 'Normal',   color: '#6cb8ff', fn: v => trapmf(v, 80, 80, 105, 125) },
+  { label: 'Elevated', color: '#ffb347', fn: v => trapmf(v, 110, 125, 140, 155) },
+  { label: 'High',     color: '#ff6b6b', fn: v => trapmf(v, 140, 160, 200, 200) },
+];
+
+// Risk output MFs [0,100] triangular
+const riskOutMFs = [
+  { label: 'Low',    color: '#6cffa355', fn: v => trimf(v, 0, 0, 50) },
+  { label: 'Medium', color: '#ffb34755', fn: v => trimf(v, 25, 50, 75) },
+  { label: 'High',   color: '#ff6b6b55', fn: v => trimf(v, 50, 100, 100) },
+];
+
+function medDefuzz(lowClamp, medClamp, highClamp) {
+  let num = 0, den = 0;
+  const clamps = [lowClamp, medClamp, highClamp];
+  for (let rv = 0; rv <= 100; rv += 0.5) {
+    const agg = Math.max(...clamps.map((c, i) => Math.min(c, [
+      v => trimf(v, 0, 0, 50),
+      v => trimf(v, 25, 50, 75),
+      v => trimf(v, 50, 100, 100),
+    ][i](rv))));
+    num += rv * agg; den += agg;
+  }
+  return den === 0 ? 50 : num / den;
+}
+
+function updateMedical() {
+  const hr = +document.getElementById('hrSlider').value;
+  const bp = +document.getElementById('bpSlider').value;
+  document.getElementById('hrVal').textContent = hr + ' bpm';
+  document.getElementById('bpVal').textContent = bp + ' mmHg';
+
+  // HR memberships
+  const hrDegs = hrMFsDef.map(m => m.fn(hr));
+  const hrIds = ['hrLow','hrMed','hrHigh'];
+  hrDegs.forEach((d, i) => {
+    document.getElementById(hrIds[i]+'Deg').textContent = d.toFixed(2);
+    document.getElementById(hrIds[i]+'Bar').style.width = (d * 100) + '%';
+  });
+
+  // BP memberships
+  const bpDegs = bpMFsDef.map(m => m.fn(bp));
+  const bpIds = ['bpNorm','bpElev','bpHigh'];
+  bpDegs.forEach((d, i) => {
+    document.getElementById(bpIds[i]+'Deg').textContent = d.toFixed(2);
+    document.getElementById(bpIds[i]+'Bar').style.width = (d * 100) + '%';
+  });
+
+  // Rules:
+  // R1: HR_low AND BP_normal → Risk Low   (AND = min)
+  // R2: HR_med AND BP_elev  → Risk Medium
+  // R3: HR_high OR BP_high  → Risk High   (OR = max)
+  const r1 = Math.min(hrDegs[0], bpDegs[0]);
+  const r2 = Math.min(hrDegs[1], bpDegs[1]);
+  const r3 = Math.max(hrDegs[2], bpDegs[2]);
+
+  [r1, r2, r3].forEach((strength, i) => {
+    document.getElementById('mr'+(i+1)+'fill').style.width = (strength*100)+'%';
+    document.getElementById('mr'+(i+1)).classList.toggle('firing', strength > 0.01);
+  });
+
+  const riskVal = medDefuzz(r1, r2, r3);
+
+  let riskLabel, riskColor, riskDesc;
+  if (riskVal < 35)      { riskLabel = 'پایین 🟢';   riskColor = '#6cffa3'; riskDesc = 'وضعیت طبیعی — نیازی به اقدام نیست'; }
+  else if (riskVal < 65) { riskLabel = 'متوسط 🟡'; riskColor = '#ffb347'; riskDesc = 'نیاز به پایش منظم'; }
+  else                   { riskLabel = 'بالا 🔴';    riskColor = '#ff6b6b'; riskDesc = 'مراجعه فوری به پزشک توصیه می‌شود'; }
+
+  document.getElementById('riskValue').textContent = riskLabel;
+  document.getElementById('riskValue').style.color = riskColor;
+  document.getElementById('riskDesc').textContent = riskDesc;
+  document.getElementById('riskIndicator').style.borderColor = riskColor;
+
+  drawMedMF('hrMFCanvas', hr, 40, 160, hrMFsDef, 5);
+  drawMedMF('bpMFCanvas', bp, 80, 200, bpMFsDef, 6);
+  drawRiskOutput(r1, r2, r3, riskVal);
+}
+
+function drawMedMF(canvasId, val, minV, maxV, mfDefs, tickSteps) {
+  const { ctx, W, H } = setupCanvas(canvasId, 160);
+  const pad = 35, innerW = W - pad * 2, innerH = H - 30;
+  ctx.clearRect(0, 0, W, H);
+  drawGrid(ctx, pad, innerW, innerH, H);
+  axisLabels(ctx, pad, innerW, innerH, H, minV, maxV, tickSteps);
+
+  mfDefs.forEach((mf, i) => {
+    drawCurve(ctx, minV, maxV, pad, innerW, innerH, mf.fn, mf.color, 2.5);
+    // Label at top of trapezoid
+    const peakV = minV + (maxV - minV) * [0.1, 0.5, 0.9][i];
+    const px = pad + ((peakV - minV) / (maxV - minV)) * innerW;
+    ctx.fillStyle = mf.color; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(mf.label, px, pad - 3);
+  });
+
+  // Vertical input line
+  const vx = pad + ((val - minV) / (maxV - minV)) * innerW;
+  drawVerticalLine(ctx, vx, pad, innerH, '#aaaaaa', true);
+
+  // Dots at intersections
+  mfDefs.forEach(mf => {
+    const d = mf.fn(val);
+    if (d > 0.005) drawDot(ctx, vx, pad + (1 - d) * innerH, mf.color);
+  });
+
+  // Input label
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(val, vx, pad + innerH + 14);
+}
+
+function drawRiskOutput(r1, r2, r3, riskVal) {
+  const { ctx, W, H } = setupCanvas('riskOutCanvas', 150);
+  const pad = 32, innerW = W - pad * 2, innerH = H - 28;
+  ctx.clearRect(0, 0, W, H);
+  drawGrid(ctx, pad, innerW, innerH, H);
+  axisLabels(ctx, pad, innerW, innerH, H, 0, 100, 4);
+
+  const clamps = [r1, r2, r3];
+  riskOutMFs.forEach((m, i) => drawFilledOutput(ctx, pad, innerW, innerH, clamps[i], m.fn, m.color));
+
+  // Centroid
+  const dx = pad + (riskVal / 100) * innerW;
+  drawVerticalLine(ctx, dx, pad, innerH, '#aaaaaa', true);
+  ctx.fillStyle = '#aaaaaa'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Centroid: ' + riskVal.toFixed(1), dx, pad - 4);
+  drawDot(ctx, dx, pad + innerH, '#aaaaaa', 4);
+}
+
+// ========================
+// THEORY canvas
+// ========================
+function drawTheory() {
+  const { ctx, W, H } = setupCanvas('mfTypesCanvas', 190);
+  const pad = 30, innerW = W - pad * 2, innerH = H - 30;
+  ctx.clearRect(0, 0, W, H);
+  drawGrid(ctx, pad, innerW, innerH, H);
+
+  // Triangular (blue)
+  ctx.strokeStyle = '#6c8fff'; ctx.lineWidth = 2.5;
+  [[0,0.2,0.4],[0.3,0.5,0.7],[0.6,0.8,1]].forEach(([a,b,c]) => {
+    ctx.beginPath();
+    ctx.moveTo(pad + a*innerW, pad + innerH);
+    ctx.lineTo(pad + b*innerW, pad);
+    ctx.lineTo(pad + c*innerW, pad + innerH);
+    ctx.stroke();
+  });
+
+  // Trapezoidal (orange)
+  ctx.strokeStyle = '#ffb347'; ctx.lineWidth = 2.5;
+  const traps = [[0.02,0.15,0.35,0.48],[0.5,0.6,0.72,0.82]];
+  traps.forEach(([a,b,c,d]) => {
+    ctx.beginPath();
+    ctx.moveTo(pad + a*innerW, pad + innerH);
+    ctx.lineTo(pad + b*innerW, pad + 0.05*innerH);
+    ctx.lineTo(pad + c*innerW, pad + 0.05*innerH);
+    ctx.lineTo(pad + d*innerW, pad + innerH);
+    ctx.stroke();
+  });
+
+  // Gaussian (green)
+  ctx.strokeStyle = '#6cffa3'; ctx.lineWidth = 2.5; ctx.beginPath();
+  for (let v = 0; v <= 1; v += 0.004) {
+    const g = gaussian(v, 0.5, 0.1);
+    v === 0 ? ctx.moveTo(pad + v*innerW, pad + (1-g)*innerH)
+            : ctx.lineTo(pad + v*innerW, pad + (1-g)*innerH);
+  }
+  ctx.stroke();
+
+  ctx.fillStyle = '#8892b0'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('0', pad, H-2); ctx.fillText('0.5', pad+innerW/2, H-2); ctx.fillText('1', W-pad, H-2);
+}
+
+// ========================
+// Tab switching
+// ========================
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', ['fan','medical','theory'][i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  setTimeout(() => {
+    if (name === 'fan') { updateFan(); }
+    else if (name === 'medical') { updateMedical(); }
+    else { drawTheory(); }
+  }, 30);
+}
+
+// ========================
+// Init
+// ========================
+updateFan();
+updateMedical();
+window.addEventListener('resize', () => {
+  if (document.getElementById('tab-fan').classList.contains('active')) updateFan();
+  else if (document.getElementById('tab-medical').classList.contains('active')) updateMedical();
+  else drawTheory();
+});
+
+
+// Theme Toggle
+const themeToggle = document.getElementById('theme-toggle');
+let isDarkMode = true;
+
+function toggleTheme() {
+  const root = document.documentElement;
+  
+  if (isDarkMode) {
+    // تغییر به light mode
+    root.classList.add('light');
+    themeToggle.innerHTML = '🌙 Dark';
+    isDarkMode = false;
+    localStorage.setItem('theme', 'light');
+  } else {
+    // تغییر به dark mode
+    root.classList.remove('light');
+    themeToggle.innerHTML = '☀️ Light';
+    isDarkMode = true;
+    localStorage.setItem('theme', 'dark');
+  }
+}
+
+// بررسی تنظیمات ذخیره شده
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme === 'light') {
+  document.documentElement.classList.add('light');
+  themeToggle.innerHTML = '🌙 دَرک';
+  isDarkMode = false;
+} else {
+  themeToggle.innerHTML = '☀️ لایت';
+}
+
+themeToggle.addEventListener('click', toggleTheme);
+</script>
+</body>
+</html>
